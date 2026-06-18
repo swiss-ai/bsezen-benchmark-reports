@@ -8,6 +8,12 @@
 
 ---
 
+## Research Question
+
+Does platform (Kubernetes vs SLURM) measurably affect Apertus-8B inference performance at identical hardware and engine configuration, and if so, where (TTFT, TPOT, saturation)?
+
+---
+
 ## Executive Summary
 
 This report compares the inference performance of **Apertus-8B** served via **Kubernetes** versus **Slurm** on identical hardware (single GH200 node). Both deployments use SGLang with the same configuration.

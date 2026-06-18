@@ -6,6 +6,10 @@
 **Replicates:** N=2 per engine  
 **Benchmark nodes:** `infra02` with `power_throttling` reservation
 
+## Research Question
+
+With prefix/radix caching disabled and identical workload, do vLLM and SGLang reach the same saturation point on Apertus-70B, and what saturates first?
+
 ## Executive Summary
 
 This report compares vLLM and SGLang on Apertus-70B after correcting the initial invalid comparison. vLLM prefix caching and SGLang radix caching are both disabled. The exact same prompt pool, arrival process, phases, SLOs, and served models were reused across the two replicates.
