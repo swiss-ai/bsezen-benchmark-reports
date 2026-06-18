@@ -30,6 +30,7 @@ class Run:
     replicate: int
     db: Path
     benchmark_job_id: str
+    served_job_id: str
 
 
 SERVED = {
@@ -42,10 +43,12 @@ SERVED = {
 }
 
 RUNS = [
-    Run("Direct #1", "Direct", 1, DATA / "direct_run1.db", "2561761"),
-    Run("Direct #2", "Direct", 2, DATA / "direct_run2.db", "2562891"),
-    Run("API #1", "API", 1, DATA / "api_run1.db", "2561998"),
-    Run("API #2", "API", 2, DATA / "api_run2.db", "2563417"),
+    Run("Direct #1", "Direct", 1, DATA / "direct_run1.db", "2561761", "2561679"),
+    Run("Direct #2", "Direct", 2, DATA / "direct_run2.db", "2562891", "2561679"),
+    Run("Direct #3", "Direct", 3, DATA / "direct_run3.db", "2564347", "2563694"),
+    Run("API #1", "API", 1, DATA / "api_run1.db", "2561998", "2561679"),
+    Run("API #2", "API", 2, DATA / "api_run2.db", "2563417", "2561679"),
+    Run("API #3", "API", 3, DATA / "api_run3.db", "2564475", "2563694"),
 ]
 
 
@@ -136,8 +139,8 @@ def add_dcgm(data: dict) -> None:
         "fb_used_gib": "avg(avg_over_time(DCGM_FI_DEV_FB_USED{{{sel}}}[{dur}s])) / 1024",
         "power_total_w": "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE{{{sel}}}[{dur}s]))",
     }
-    sel = f'slurm_job_id="{SERVED["job_id"]}"'
     for item in data["runs"]:
+        sel = f'slurm_job_id="{item["run"]["served_job_id"]}"'
         for rate in item["rates"]:
             start = iso_to_ts(rate["start"])
             end = iso_to_ts(rate["end"])
@@ -191,15 +194,21 @@ def generate_plots(data: dict) -> None:
     g = grouped(data)
     rates = [8.0, 16.0, 24.0]
     colors = {"Direct": "#0072B2", "API": "#D55E00"}
-    fig, axes = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
-    for metric, ax, label in [("ttft_p95_ms", axes[0], "TTFT p95 (ms)"), ("tpot_p95_ms", axes[1], "TPOT p95 (ms)")]:
+    fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
+    for metric, ax, slo, label in [
+        ("ttft_p95_ms", axes[0], 10000, "TTFT p95 (ms)"),
+        ("tpot_p95_ms", axes[1], 200, "TPOT p95 (ms)"),
+    ]:
         for path in ["Direct", "API"]:
-            means, errs = [], []
+            means, lows, highs = [], [], []
             for rate in rates:
                 m, s = mean_std([g[path][rep][rate].get(metric) for rep in g[path]])
                 means.append(m)
-                errs.append(s or 0)
-            ax.errorbar(rates, means, yerr=errs, marker="o", capsize=4, label=path, color=colors[path])
+                lows.append(s or 0)
+                highs.append(s or 0)
+            ax.errorbar(rates, means, yerr=[lows, highs], marker="o", linewidth=2, capsize=4, label=path, color=colors[path])
+        ax.axhline(slo, color="#cc0000", linestyle="--", label=f"SLO {slo:g} ms")
+        ax.set_yscale("log")
         ax.set_ylabel(label)
         ax.grid(True, alpha=0.25)
     axes[1].set_xlabel("λ (requests/s)")
@@ -215,8 +224,8 @@ def write_report(data: dict) -> None:
 **Date:** 2026-06-18  
 **Model:** `swiss-ai/Apertus-8B-Instruct-2509`  
 **Engine:** SGLang, radix cache disabled, metrics enabled  
-**Served job:** `{SERVED['job_id']}` on `{SERVED['node']}`  
-**Replicates:** N=2 per endpoint path
+**Serving:** SGLang, same launch configuration  
+**Replicates:** N=3 per endpoint path
 
 ## Research Question
 
@@ -274,7 +283,7 @@ Both paths passed through λ=16 and early-stopped at λ=24 due TTFT p95 saturati
 
 {table(data, 'power_total_w', dcgm=True)}
 
-DCGM telemetry is queried with `slurm_job_id="{SERVED['job_id']}"` and aligned to each benchmark measurement window using timestamps from the run DBs.
+DCGM telemetry is queried by served-model SLURM job ID and aligned to each benchmark measurement window using timestamps from the run DBs.
 
 ## Provenance
 
@@ -282,8 +291,10 @@ DCGM telemetry is queried with `slurm_job_id="{SERVED['job_id']}"` and aligned t
 |---|---:|---:|---|
 | Direct | 1 | 2561761 | `data/direct_run1.db` |
 | Direct | 2 | 2562891 | `data/direct_run2.db` |
+| Direct | 3 | 2564347 | `data/direct_run3.db` |
 | API | 1 | 2561998 | `data/api_run1.db` |
 | API | 2 | 2563417 | `data/api_run2.db` |
+| API | 3 | 2564475 | `data/api_run3.db` |
 
 ## Limitations
 

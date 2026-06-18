@@ -14,7 +14,8 @@
         "path": "Direct",
         "replicate": 1,
         "db": "direct_run1.db",
-        "benchmark_job_id": "2561761"
+        "benchmark_job_id": "2561761",
+        "served_job_id": "2561679"
       },
       "experiment": {
         "run_id": "20260618-154240_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-183436_sglang_clariden_8f75",
@@ -115,7 +116,8 @@
         "path": "Direct",
         "replicate": 2,
         "db": "direct_run2.db",
-        "benchmark_job_id": "2562891"
+        "benchmark_job_id": "2562891",
+        "served_job_id": "2561679"
       },
       "experiment": {
         "run_id": "20260618-174555_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-183436_sglang_clariden_e533",
@@ -212,11 +214,114 @@
     },
     {
       "run": {
+        "name": "Direct #3",
+        "path": "Direct",
+        "replicate": 3,
+        "db": "direct_run3.db",
+        "benchmark_job_id": "2564347",
+        "served_job_id": "2563694"
+      },
+      "experiment": {
+        "run_id": "20260618-203524_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-215759_sglang_clariden_1ba1",
+        "model": "swiss-ai/Apertus-8B-Instruct-2509-api-overhead-sglang-brachium-20260618-215759",
+        "backend": "sglang",
+        "backend_config": "{\"data_parallel_size\": 1, \"disable_custom_all_reduce\": false, \"enable_prefix_caching\": true, \"enforce_eager\": false, \"env\": {}, \"expert_parallel_size\": 1, \"gpu_memory_utilization\": null, \"kv_cache_dtype\": null, \"kv_offloading_backend\": null, \"kv_offloading_size\": null, \"max_model_len\": 8192, \"max_num_batched_tokens\": null, \"pipeline_parallel_size\": 1, \"safetensors_load_strategy\": null, \"speculative_decoding\": null, \"tensor_parallel_size\": 1}",
+        "dataset_config": "{\"num_prompts\": 20000, \"output_length_mode\": \"forced\", \"recycle_prompts\": true, \"scenario_mix\": [{\"input_length\": null, \"output_length\": null, \"scenario\": \"thesis-apertus-medium\", \"session\": null, \"source_overrides\": null, \"weight\": 1.0}], \"seed\": 1234, \"tokenizer_id\": \"word\"}",
+        "scenario_mix": "[{\"scenario\": \"thesis-apertus-medium\", \"weight\": 1.0}]",
+        "scenario_manifest": "{\"classes\": [{\"assumptions\": [\"input length distribution: fixed {'value': 1.0}\", \"output length distribution: fixed {'value': 1.0}\", \"turns per session: fixed {'value': 1.0}\", \"session mode: open_loop\", \"prefix strategy: append_delta\", \"source: prompt_file {'path_env': 'IBT_APERTUS_PROMPTS_FILE', 'path': '/capstor/scratch/cscs/bsezen/loadtest/prompts-apertus.json', 'labels': ['medium']}\"], \"maturity\": \"exploratory\", \"modelled\": [\"Existing thesis Apertus medium prompts generated outside IBT.\", \"Preserves prompt text, input-token counts when present, and max_tokens from the source file.\"], \"name\": \"thesis-apertus-medium\", \"not_modelled\": [\"Multi-turn sessions are not represented; each prompt is a standalone request.\", \"Prompt-file provenance is external to IBT and must be disclosed in the report.\"], \"summary\": \"Existing thesis Apertus prompt file, filtered to the medium class.\", \"weight\": 1.0}], \"mix\": [{\"expected_request_share\": 1.0, \"scenario\": \"thesis-apertus-medium\", \"weight\": 1.0}], \"run_assumptions\": [\"arrival process: poisson \\u2014 \\u03bb counts session starts (\\u00a712.3)\", \"routing strategy: random\", \"output_length_mode: forced\", \"master seed: 1234\", \"tokenizer: word\"]}",
+        "slos": "[{\"metric\": \"ttft_ms\", \"percentile\": \"p95\", \"scenario\": \"thesis-apertus-medium\", \"threshold\": 10000.0}, {\"metric\": \"tpot_ms\", \"percentile\": \"p95\", \"scenario\": \"thesis-apertus-medium\", \"threshold\": 200.0}, {\"metric\": \"error_rate_pct\", \"percentile\": null, \"scenario\": \"all\", \"threshold\": 1.0}]",
+        "quality_eval": null,
+        "rate_levels": "[8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0]",
+        "warmup_s": 60,
+        "measurement_s": 180,
+        "created_at": "2026-06-18T20:36:09.965101+00:00"
+      },
+      "rates": [
+        {
+          "rate": 8.0,
+          "start": "2026-06-18T20:36:10.602895+00:00",
+          "end": "2026-06-18T20:40:13.876881+00:00",
+          "requests": 1894,
+          "success": 1894,
+          "error_pct": 0.0,
+          "ttft_p50_ms": 46.36808000213932,
+          "ttft_p95_ms": 87.85210375208406,
+          "tpot_p50_ms": 10.90162820793848,
+          "tpot_p95_ms": 13.989158349381555,
+          "e2e_p95_ms": 6031.780080519093,
+          "input_tokens_avg": 585.057550158395,
+          "output_tokens_avg": 269.2819429778247,
+          "input_tokens_s": 6156.105555555556,
+          "output_tokens_s": 2833.4444444444443,
+          "dcgm": {
+            "gpu_util_pct": 25.0,
+            "sm_active_pct": 15.645803124999999,
+            "tensor_active_pct": 3.745803125,
+            "mem_copy_util_pct": 15.96875,
+            "fb_used_gib": 21.8037109375,
+            "power_total_w": 766.43
+          }
+        },
+        {
+          "rate": 16.0,
+          "start": "2026-06-18T20:40:14.427183+00:00",
+          "end": "2026-06-18T20:44:20.116008+00:00",
+          "requests": 3921,
+          "success": 3918,
+          "error_pct": 0.07651109410864575,
+          "ttft_p50_ms": 102.18123250524513,
+          "ttft_p95_ms": 246.3703008063022,
+          "tpot_p50_ms": 51.586759969527634,
+          "tpot_p95_ms": 76.33376247557906,
+          "e2e_p95_ms": 31460.104048893852,
+          "input_tokens_avg": 585.9464012251149,
+          "output_tokens_avg": 269.84481878509445,
+          "input_tokens_s": 12754.1,
+          "output_tokens_s": 5873.622222222222,
+          "dcgm": {
+            "gpu_util_pct": 25.0,
+            "sm_active_pct": 21.64675625,
+            "tensor_active_pct": 10.05809375,
+            "mem_copy_util_pct": 13.78125,
+            "fb_used_gib": 21.80413818359375,
+            "power_total_w": 777.830375
+          }
+        },
+        {
+          "rate": 24.0,
+          "start": "2026-06-18T20:44:20.868483+00:00",
+          "end": "2026-06-18T20:49:55.993757+00:00",
+          "requests": 5748,
+          "success": 5748,
+          "error_pct": 0.0,
+          "ttft_p50_ms": 33072.90999198449,
+          "ttft_p95_ms": 74101.70431248844,
+          "tpot_p50_ms": 133.86014010005266,
+          "tpot_p95_ms": 145.43271599436036,
+          "e2e_p95_ms": 114579.5386000056,
+          "input_tokens_avg": 585.6151704940849,
+          "output_tokens_avg": 269.723208072373,
+          "input_tokens_s": 18700.644444444446,
+          "output_tokens_s": 8613.16111111111,
+          "dcgm": {
+            "gpu_util_pct": 24.083333333333332,
+            "sm_active_pct": 22.89465625,
+            "tensor_active_pct": 11.243902083333333,
+            "mem_copy_util_pct": 12.75,
+            "fb_used_gib": 21.80419921875,
+            "power_total_w": 776.8469166666666
+          }
+        }
+      ]
+    },
+    {
+      "run": {
         "name": "API #1",
         "path": "API",
         "replicate": 1,
         "db": "api_run1.db",
-        "benchmark_job_id": "2561998"
+        "benchmark_job_id": "2561998",
+        "served_job_id": "2561679"
       },
       "experiment": {
         "run_id": "20260618-162729_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-183436_sglang_clariden_7542",
@@ -317,7 +422,8 @@
         "path": "API",
         "replicate": 2,
         "db": "api_run2.db",
-        "benchmark_job_id": "2563417"
+        "benchmark_job_id": "2563417",
+        "served_job_id": "2561679"
       },
       "experiment": {
         "run_id": "20260618-181730_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-183436_sglang_clariden_d172",
@@ -408,6 +514,108 @@
             "mem_copy_util_pct": 14.227272727272727,
             "fb_used_gib": 21.956298828125,
             "power_total_w": 795.505
+          }
+        }
+      ]
+    },
+    {
+      "run": {
+        "name": "API #3",
+        "path": "API",
+        "replicate": 3,
+        "db": "api_run3.db",
+        "benchmark_job_id": "2564475",
+        "served_job_id": "2563694"
+      },
+      "experiment": {
+        "run_id": "20260618-203524_apertus-8b-instruct-2509-api-overhead-sglang-brachium-20260618-215759_sglang_clariden_e4ad",
+        "model": "swiss-ai/Apertus-8B-Instruct-2509-api-overhead-sglang-brachium-20260618-215759",
+        "backend": "sglang",
+        "backend_config": "{\"data_parallel_size\": 1, \"disable_custom_all_reduce\": false, \"enable_prefix_caching\": true, \"enforce_eager\": false, \"env\": {}, \"expert_parallel_size\": 1, \"gpu_memory_utilization\": null, \"kv_cache_dtype\": null, \"kv_offloading_backend\": null, \"kv_offloading_size\": null, \"max_model_len\": 8192, \"max_num_batched_tokens\": null, \"pipeline_parallel_size\": 1, \"safetensors_load_strategy\": null, \"speculative_decoding\": null, \"tensor_parallel_size\": 1}",
+        "dataset_config": "{\"num_prompts\": 20000, \"output_length_mode\": \"forced\", \"recycle_prompts\": true, \"scenario_mix\": [{\"input_length\": null, \"output_length\": null, \"scenario\": \"thesis-apertus-medium\", \"session\": null, \"source_overrides\": null, \"weight\": 1.0}], \"seed\": 1234, \"tokenizer_id\": \"word\"}",
+        "scenario_mix": "[{\"scenario\": \"thesis-apertus-medium\", \"weight\": 1.0}]",
+        "scenario_manifest": "{\"classes\": [{\"assumptions\": [\"input length distribution: fixed {'value': 1.0}\", \"output length distribution: fixed {'value': 1.0}\", \"turns per session: fixed {'value': 1.0}\", \"session mode: open_loop\", \"prefix strategy: append_delta\", \"source: prompt_file {'path_env': 'IBT_APERTUS_PROMPTS_FILE', 'path': '/capstor/scratch/cscs/bsezen/loadtest/prompts-apertus.json', 'labels': ['medium']}\"], \"maturity\": \"exploratory\", \"modelled\": [\"Existing thesis Apertus medium prompts generated outside IBT.\", \"Preserves prompt text, input-token counts when present, and max_tokens from the source file.\"], \"name\": \"thesis-apertus-medium\", \"not_modelled\": [\"Multi-turn sessions are not represented; each prompt is a standalone request.\", \"Prompt-file provenance is external to IBT and must be disclosed in the report.\"], \"summary\": \"Existing thesis Apertus prompt file, filtered to the medium class.\", \"weight\": 1.0}], \"mix\": [{\"expected_request_share\": 1.0, \"scenario\": \"thesis-apertus-medium\", \"weight\": 1.0}], \"run_assumptions\": [\"arrival process: poisson \\u2014 \\u03bb counts session starts (\\u00a712.3)\", \"routing strategy: random\", \"output_length_mode: forced\", \"master seed: 1234\", \"tokenizer: word\"]}",
+        "slos": "[{\"metric\": \"ttft_ms\", \"percentile\": \"p95\", \"scenario\": \"thesis-apertus-medium\", \"threshold\": 10000.0}, {\"metric\": \"tpot_ms\", \"percentile\": \"p95\", \"scenario\": \"thesis-apertus-medium\", \"threshold\": 200.0}, {\"metric\": \"error_rate_pct\", \"percentile\": null, \"scenario\": \"all\", \"threshold\": 1.0}]",
+        "quality_eval": null,
+        "rate_levels": "[8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0]",
+        "warmup_s": 60,
+        "measurement_s": 180,
+        "created_at": "2026-06-18T20:54:33.469240+00:00"
+      },
+      "rates": [
+        {
+          "rate": 8.0,
+          "start": "2026-06-18T20:54:34.172647+00:00",
+          "end": "2026-06-18T20:58:37.068185+00:00",
+          "requests": 1894,
+          "success": 1894,
+          "error_pct": 0.0,
+          "ttft_p50_ms": 56.10183152020909,
+          "ttft_p95_ms": 99.04824058758092,
+          "tpot_p50_ms": 11.131521226297142,
+          "tpot_p95_ms": 14.70288155954222,
+          "e2e_p95_ms": 6096.355471252173,
+          "input_tokens_avg": 585.057550158395,
+          "output_tokens_avg": 263.88384371700107,
+          "input_tokens_s": 6156.105555555556,
+          "output_tokens_s": 2776.6444444444446,
+          "dcgm": {
+            "gpu_util_pct": 25.0,
+            "sm_active_pct": 16.065965625,
+            "tensor_active_pct": 3.865409375,
+            "mem_copy_util_pct": 16.0,
+            "fb_used_gib": 21.8040771484375,
+            "power_total_w": 762.441
+          }
+        },
+        {
+          "rate": 16.0,
+          "start": "2026-06-18T20:58:38.091211+00:00",
+          "end": "2026-06-18T21:02:44.090028+00:00",
+          "requests": 3921,
+          "success": 3921,
+          "error_pct": 0.0,
+          "ttft_p50_ms": 119.10686900955625,
+          "ttft_p95_ms": 387.49224902130663,
+          "tpot_p50_ms": 53.44557793184796,
+          "tpot_p95_ms": 79.26904903310198,
+          "e2e_p95_ms": 31971.759706997545,
+          "input_tokens_avg": 585.9489926039275,
+          "output_tokens_avg": 263.8849783218567,
+          "input_tokens_s": 12763.922222222222,
+          "output_tokens_s": 5748.294444444445,
+          "dcgm": {
+            "gpu_util_pct": 25.0,
+            "sm_active_pct": 21.73110625,
+            "tensor_active_pct": 10.217215625000001,
+            "mem_copy_util_pct": 13.8125,
+            "fb_used_gib": 21.8038330078125,
+            "power_total_w": 774.51125
+          }
+        },
+        {
+          "rate": 24.0,
+          "start": "2026-06-18T21:02:44.974386+00:00",
+          "end": "2026-06-18T21:08:18.127362+00:00",
+          "requests": 5748,
+          "success": 5748,
+          "error_pct": 0.0,
+          "ttft_p50_ms": 33112.027971990756,
+          "ttft_p95_ms": 74047.15738735539,
+          "tpot_p50_ms": 135.04453387295186,
+          "tpot_p95_ms": 155.3052678695805,
+          "e2e_p95_ms": 114326.9551079924,
+          "input_tokens_avg": 585.6151704940849,
+          "output_tokens_avg": 263.92814892136397,
+          "input_tokens_s": 18700.644444444446,
+          "output_tokens_s": 8428.105555555556,
+          "dcgm": {
+            "gpu_util_pct": 25.0,
+            "sm_active_pct": 23.035377272727274,
+            "tensor_active_pct": 11.304340909090909,
+            "mem_copy_util_pct": 13.068181818181818,
+            "fb_used_gib": 21.8037109375,
+            "power_total_w": 782.8137272727272
           }
         }
       ]
