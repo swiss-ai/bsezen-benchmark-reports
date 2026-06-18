@@ -16,6 +16,8 @@ from __future__ import annotations
 import json
 import math
 import sqlite3
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,6 +33,23 @@ IMAGES = ROOT / "images"
 IMAGES.mkdir(exist_ok=True)
 
 MEASUREMENT_S = 180  # configured per benchmark_config.yaml
+
+PROM_BASE = "https://metrics.swissai.svc.cscs.ch/api/datasources/proxy/uid/PBFA97CFB590B2093/api/v1/query"
+
+DCGM_METRICS = {
+    "gpu_util_pct":       "avg(avg_over_time(DCGM_FI_DEV_GPU_UTIL{{{sel}}}[{dur}s]))",
+    "sm_active_pct":      "100 * avg(avg_over_time(DCGM_FI_PROF_SM_ACTIVE{{{sel}}}[{dur}s]))",
+    "tensor_active_pct":  "100 * avg(avg_over_time(DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{{{sel}}}[{dur}s]))",
+    "mem_copy_util_pct":  "avg(avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{{{sel}}}[{dur}s]))",
+    "fb_used_gib":        "avg(avg_over_time(DCGM_FI_DEV_FB_USED{{{sel}}}[{dur}s])) / 1024",
+    "power_total_w":      "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE{{{sel}}}[{dur}s]))",
+    # Communication — NVLink and PCIe throughput. PROF metrics are bytes counters;
+    # rate() gives bytes/s, summed across all GPUs in the job. GiB/s for readability.
+    "nvlink_tx_gib_s":    "sum(rate(DCGM_FI_PROF_NVLINK_TX_BYTES{{{sel}}}[{dur}s])) / 1073741824",
+    "nvlink_rx_gib_s":    "sum(rate(DCGM_FI_PROF_NVLINK_RX_BYTES{{{sel}}}[{dur}s])) / 1073741824",
+    "pcie_tx_gib_s":      "sum(rate(DCGM_FI_PROF_PCIE_TX_BYTES{{{sel}}}[{dur}s])) / 1073741824",
+    "pcie_rx_gib_s":      "sum(rate(DCGM_FI_PROF_PCIE_RX_BYTES{{{sel}}}[{dur}s])) / 1073741824",
+}
 
 SOURCE_PROMPT_DISTRIBUTION = {
     "source_file": "/capstor/scratch/cscs/bsezen/loadtest/prompts-deepseek-thesis.json",
@@ -123,10 +142,39 @@ def mean_std(values: list[float | None]) -> tuple[float | None, float | None]:
     return mean, math.sqrt(var)
 
 
+def iso_to_ts(value: str) -> float:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+
+
+def prom_scalar(query: str, ts: float) -> float | None:
+    params = urllib.parse.urlencode({"query": query, "time": f"{ts:.0f}"})
+    try:
+        with urllib.request.urlopen(f"{PROM_BASE}?{params}", timeout=30) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+    if payload.get("status") != "success":
+        return None
+    results = payload.get("data", {}).get("result", [])
+    if not results:
+        return None
+    try:
+        return float(results[0]["value"][1])
+    except Exception:
+        return None
+
+
 def load_run(run: Run) -> dict:
     con = sqlite3.connect(run.db)
     con.row_factory = sqlite3.Row
     experiment = dict(con.execute("select * from experiments limit 1").fetchone())
+    server_windows = {
+        float(rate): (start, end)
+        for rate, start, end in con.execute(
+            "select rate_lambda, min(ts), max(ts) from server_stats "
+            "group by rate_lambda order by rate_lambda"
+        )
+    }
     rates = []
     for (rate,) in con.execute(
         "select distinct rate_lambda from requests order by rate_lambda"
@@ -138,8 +186,11 @@ def load_run(run: Run) -> dict:
         ).fetchall()
         ok = [r for r in rows if r["success"]]
         errors = len(rows) - len(ok)
-        rates.append({
+        start, end = server_windows.get(float(rate), (None, None))
+        entry = {
             "rate": float(rate),
+            "start": start,
+            "end": end,
             "requests": len(rows),
             "success": len(ok),
             "error_pct": 100 * errors / len(rows) if rows else None,
@@ -154,7 +205,16 @@ def load_run(run: Run) -> dict:
             "output_tokens_avg": sum(r["output_tokens"] for r in ok) / len(ok) if ok else None,
             "input_tokens_s": sum(r["input_tokens"] for r in ok) / MEASUREMENT_S if ok else None,
             "output_tokens_s": sum(r["output_tokens"] for r in ok) / MEASUREMENT_S if ok else None,
-        })
+        }
+        if start and end:
+            t_start, t_end = iso_to_ts(start), iso_to_ts(end)
+            dur = max(1, int(t_end - t_start))
+            sel = f'slurm_job_id="{run.serving_slurm_job_id}"'
+            entry["dcgm"] = {
+                name: prom_scalar(template.format(sel=sel, dur=dur), t_end)
+                for name, template in DCGM_METRICS.items()
+            }
+        rates.append(entry)
     con.close()
     return {
         "variant": run.variant,
@@ -238,6 +298,64 @@ def generate_plots(data: dict) -> None:
     ax.legend()
     fig.tight_layout()
     fig.savefig(IMAGES / "throughput_sweep.png", dpi=180)
+    plt.close(fig)
+
+    dcgm_panels = [
+        ("gpu_util_pct", "GPU util %"),
+        ("sm_active_pct", "SM active %"),
+        ("tensor_active_pct", "Tensor active %"),
+        ("power_total_w", "Total GPU power (W, 16 GPUs)"),
+    ]
+    fig, axes = plt.subplots(len(dcgm_panels), 1, figsize=(9, 11), sharex=True)
+    for (metric, label), ax in zip(dcgm_panels, axes):
+        for variant in VARIANT_ORDER:
+            reps = g.get(variant, {})
+            means, stds = [], []
+            for rate in rates:
+                vals = [reps[r].get(rate, {}).get("dcgm", {}).get(metric) for r in reps]
+                m, s = mean_std(vals)
+                means.append(m)
+                stds.append(s or 0)
+            ax.errorbar(
+                rates, means, yerr=stds,
+                marker="o", linewidth=2, capsize=4,
+                label=variant, color=VARIANT_COLORS[variant],
+            )
+        ax.set_ylabel(label)
+        ax.grid(True, alpha=0.25)
+    axes[-1].set_xlabel("λ (requests/s)")
+    axes[0].legend()
+    fig.tight_layout()
+    fig.savefig(IMAGES / "dcgm_sweep.png", dpi=180)
+    plt.close(fig)
+
+    comm_panels = [
+        ("nvlink_tx_gib_s", "NVLink TX (GiB/s, summed across 16 GPUs)"),
+        ("nvlink_rx_gib_s", "NVLink RX (GiB/s, summed across 16 GPUs)"),
+        ("pcie_tx_gib_s",   "PCIe TX (GiB/s, summed across 16 GPUs)"),
+        ("pcie_rx_gib_s",   "PCIe RX (GiB/s, summed across 16 GPUs)"),
+    ]
+    fig, axes = plt.subplots(len(comm_panels), 1, figsize=(9, 11), sharex=True)
+    for (metric, label), ax in zip(comm_panels, axes):
+        for variant in VARIANT_ORDER:
+            reps = g.get(variant, {})
+            means, stds = [], []
+            for rate in rates:
+                vals = [reps[r].get(rate, {}).get("dcgm", {}).get(metric) for r in reps]
+                m, s = mean_std(vals)
+                means.append(m)
+                stds.append(s or 0)
+            ax.errorbar(
+                rates, means, yerr=stds,
+                marker="o", linewidth=2, capsize=4,
+                label=variant, color=VARIANT_COLORS[variant],
+            )
+        ax.set_ylabel(label)
+        ax.grid(True, alpha=0.25)
+    axes[-1].set_xlabel("λ (requests/s)")
+    axes[0].legend()
+    fig.tight_layout()
+    fig.savefig(IMAGES / "comm_sweep.png", dpi=180)
     plt.close(fig)
 
 

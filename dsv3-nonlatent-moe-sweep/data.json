@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-18T17:54:19.755899+00:00",
+  "generated": "2026-06-18T18:06:42.818905+00:00",
   "slos": {
     "ttft_p95_ms": 3000,
     "tpot_p95_ms": 80,
@@ -53,6 +53,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T12:53:53.707239+00:00",
+          "end": "2026-06-18T12:58:05.180786+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -66,10 +68,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.65106382978723,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.51666666666665
+          "output_tokens_s": 345.51666666666665,
+          "dcgm": {
+            "gpu_util_pct": 97.2734375,
+            "sm_active_pct": 13.06345625,
+            "tensor_active_pct": 1.7848,
+            "mem_copy_util_pct": 7.78125,
+            "fb_used_gib": 84.15353393554688,
+            "power_total_w": 3293.912625,
+            "nvlink_tx_gib_s": 0.7762492985109842,
+            "nvlink_rx_gib_s": 0.8182164288081583,
+            "pcie_tx_gib_s": 5.0069586861701235e-05,
+            "pcie_rx_gib_s": 0.00010989309244212649
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T12:58:06.041245+00:00",
+          "end": "2026-06-18T13:02:23.328351+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -83,10 +99,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 273.90103092783505,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.0111111111111
+          "output_tokens_s": 738.0111111111111,
+          "dcgm": {
+            "gpu_util_pct": 98.0625,
+            "sm_active_pct": 14.56204453125,
+            "tensor_active_pct": 1.85321796875,
+            "mem_copy_util_pct": 7.546875,
+            "fb_used_gib": 84.25347137451172,
+            "power_total_w": 3342.1185,
+            "nvlink_tx_gib_s": 1.628935300855942,
+            "nvlink_rx_gib_s": 1.6048291904452658,
+            "pcie_tx_gib_s": 8.873715996742249e-05,
+            "pcie_rx_gib_s": 0.00015256909121360099
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T13:02:23.654351+00:00",
+          "end": "2026-06-18T13:06:39.839847+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -100,10 +130,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.7656716417911,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.35
+          "output_tokens_s": 1041.35,
+          "dcgm": {
+            "gpu_util_pct": 97.96875,
+            "sm_active_pct": 16.37232890625,
+            "tensor_active_pct": 2.0429390625000003,
+            "mem_copy_util_pct": 7.828125,
+            "fb_used_gib": 84.42474365234375,
+            "power_total_w": 3454.927125,
+            "nvlink_tx_gib_s": 1.9790108125035963,
+            "nvlink_rx_gib_s": 1.9789926451497846,
+            "pcie_tx_gib_s": 0.00010078207900126777,
+            "pcie_rx_gib_s": 0.00017665720855196317
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T13:06:40.139403+00:00",
+          "end": "2026-06-18T13:11:03.381766+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -117,7 +161,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 267.02579979360166,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.4888888888888
+          "output_tokens_s": 1437.4888888888888,
+          "dcgm": {
+            "gpu_util_pct": 98.11805555555556,
+            "sm_active_pct": 17.595640277777775,
+            "tensor_active_pct": 2.34598125,
+            "mem_copy_util_pct": 8.256944444444445,
+            "fb_used_gib": 84.57893880208333,
+            "power_total_w": 3501.1565555555558,
+            "nvlink_tx_gib_s": 2.0079857438608695,
+            "nvlink_rx_gib_s": 2.0080055699489705,
+            "pcie_tx_gib_s": 0.00014862479141571636,
+            "pcie_rx_gib_s": 0.00023090308920169876
+          }
         }
       ]
     },
@@ -146,6 +202,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T13:16:34.019123+00:00",
+          "end": "2026-06-18T13:20:45.490258+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -159,10 +217,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.45531914893616,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.2611111111111
+          "output_tokens_s": 345.2611111111111,
+          "dcgm": {
+            "gpu_util_pct": 97.421875,
+            "sm_active_pct": 12.6185140625,
+            "tensor_active_pct": 1.72959375,
+            "mem_copy_util_pct": 7.90625,
+            "fb_used_gib": 85.01403045654297,
+            "power_total_w": 3257.370125,
+            "nvlink_tx_gib_s": 0.5809364049251945,
+            "nvlink_rx_gib_s": 0.5809218913228029,
+            "pcie_tx_gib_s": 4.338002985432034e-05,
+            "pcie_rx_gib_s": 0.00011033738652865091
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T13:20:46.356569+00:00",
+          "end": "2026-06-18T13:25:03.619516+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -176,10 +248,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 273.96494845360826,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.1833333333333
+          "output_tokens_s": 738.1833333333333,
+          "dcgm": {
+            "gpu_util_pct": 97.8125,
+            "sm_active_pct": 14.492009722222221,
+            "tensor_active_pct": 1.8438291666666666,
+            "mem_copy_util_pct": 7.729166666666666,
+            "fb_used_gib": 85.01390923394098,
+            "power_total_w": 3338.5982222222224,
+            "nvlink_tx_gib_s": 1.6784012082964181,
+            "nvlink_rx_gib_s": 1.7042255598469638,
+            "pcie_tx_gib_s": 7.747546769678592e-05,
+            "pcie_rx_gib_s": 0.0001574837563869854
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T13:25:04.215970+00:00",
+          "end": "2026-06-18T13:29:20.499839+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -193,10 +279,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.75373134328356,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.3055555555557
+          "output_tokens_s": 1041.3055555555557,
+          "dcgm": {
+            "gpu_util_pct": 97.84375,
+            "sm_active_pct": 16.149646875000002,
+            "tensor_active_pct": 2.01607421875,
+            "mem_copy_util_pct": 7.8515625,
+            "fb_used_gib": 85.01385498046875,
+            "power_total_w": 3478.620375,
+            "nvlink_tx_gib_s": 1.748707088659562,
+            "nvlink_rx_gib_s": 1.7487482921530804,
+            "pcie_tx_gib_s": 9.169959507527807e-05,
+            "pcie_rx_gib_s": 0.00016222455139671056
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T13:29:20.764111+00:00",
+          "end": "2026-06-18T13:33:43.990180+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -210,7 +310,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 267.1124871001032,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.9555555555555
+          "output_tokens_s": 1437.9555555555555,
+          "dcgm": {
+            "gpu_util_pct": 95.34722222222221,
+            "sm_active_pct": 17.644827777777778,
+            "tensor_active_pct": 2.3430006944444446,
+            "mem_copy_util_pct": 8.0625,
+            "fb_used_gib": 85.01380072699652,
+            "power_total_w": 3426.422777777778,
+            "nvlink_tx_gib_s": 2.234173641353846,
+            "nvlink_rx_gib_s": 2.2341742846493924,
+            "pcie_tx_gib_s": 0.00014589312098299467,
+            "pcie_rx_gib_s": 0.00023199926363304263
+          }
         }
       ]
     },
@@ -239,6 +351,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T13:57:41.823901+00:00",
+          "end": "2026-06-18T14:01:53.252245+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -252,10 +366,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.5276595744681,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.35555555555555
+          "output_tokens_s": 345.35555555555555,
+          "dcgm": {
+            "gpu_util_pct": 97.3828125,
+            "sm_active_pct": 11.68440859375,
+            "tensor_active_pct": 1.559659375,
+            "mem_copy_util_pct": 7.6640625,
+            "fb_used_gib": 84.8884048461914,
+            "power_total_w": 3210.3245,
+            "nvlink_tx_gib_s": 0.7321415828319178,
+            "nvlink_rx_gib_s": 0.7096104092895984,
+            "pcie_tx_gib_s": 4.6444804008517943e-05,
+            "pcie_rx_gib_s": 0.00011258127966097423
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T14:01:53.721385+00:00",
+          "end": "2026-06-18T14:06:09.937744+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -269,10 +397,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 274.1298969072165,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.6277777777777
+          "output_tokens_s": 738.6277777777777,
+          "dcgm": {
+            "gpu_util_pct": 97.7421875,
+            "sm_active_pct": 14.58171953125,
+            "tensor_active_pct": 1.76473515625,
+            "mem_copy_util_pct": 7.828125,
+            "fb_used_gib": 84.90546417236328,
+            "power_total_w": 3313.52375,
+            "nvlink_tx_gib_s": 2.0361206534185583,
+            "nvlink_rx_gib_s": 2.0029649384985015,
+            "pcie_tx_gib_s": 7.855442042152087e-05,
+            "pcie_rx_gib_s": 0.00016671957093335334
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T14:06:10.576072+00:00",
+          "end": "2026-06-18T14:10:25.816163+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -286,10 +428,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.84328358208955,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.638888888889
+          "output_tokens_s": 1041.638888888889,
+          "dcgm": {
+            "gpu_util_pct": 98.13194444444444,
+            "sm_active_pct": 15.894447916666667,
+            "tensor_active_pct": 1.9042305555555554,
+            "mem_copy_util_pct": 7.986111111111111,
+            "fb_used_gib": 84.90753173828125,
+            "power_total_w": 3364.994222222222,
+            "nvlink_tx_gib_s": 2.5780240999922777,
+            "nvlink_rx_gib_s": 2.57801323782575,
+            "pcie_tx_gib_s": 0.00011112857609987258,
+            "pcie_rx_gib_s": 0.0001778862749536832
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T14:10:26.597464+00:00",
+          "end": "2026-06-18T14:14:48.808298+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -303,7 +459,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 267.0495356037152,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.6166666666666
+          "output_tokens_s": 1437.6166666666666,
+          "dcgm": {
+            "gpu_util_pct": 98.4375,
+            "sm_active_pct": 17.93399296875,
+            "tensor_active_pct": 2.2615656250000002,
+            "mem_copy_util_pct": 8.984375,
+            "fb_used_gib": 84.90724182128906,
+            "power_total_w": 3535.368375,
+            "nvlink_tx_gib_s": 2.9991874064806674,
+            "nvlink_rx_gib_s": 2.999178294943912,
+            "pcie_tx_gib_s": 0.00015271569912632307,
+            "pcie_rx_gib_s": 0.00023192028914179123
+          }
         }
       ]
     },
@@ -332,6 +500,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T14:17:10.557341+00:00",
+          "end": "2026-06-18T14:21:21.951132+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -345,10 +515,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.65531914893614,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.52222222222224
+          "output_tokens_s": 345.52222222222224,
+          "dcgm": {
+            "gpu_util_pct": 97.3671875,
+            "sm_active_pct": 11.7764578125,
+            "tensor_active_pct": 1.5701296875,
+            "mem_copy_util_pct": 7.7578125,
+            "fb_used_gib": 84.90697479248047,
+            "power_total_w": 3191.896875,
+            "nvlink_tx_gib_s": 0.6493557016187834,
+            "nvlink_rx_gib_s": 0.6493426116671235,
+            "pcie_tx_gib_s": 5.4573378570023034e-05,
+            "pcie_rx_gib_s": 0.0001268328610985052
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T14:21:22.447223+00:00",
+          "end": "2026-06-18T14:25:38.626583+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -362,10 +546,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 274.02268041237113,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.3388888888888
+          "output_tokens_s": 738.3388888888888,
+          "dcgm": {
+            "gpu_util_pct": 97.55555555555556,
+            "sm_active_pct": 14.394388194444444,
+            "tensor_active_pct": 1.7551381944444444,
+            "mem_copy_util_pct": 7.347222222222222,
+            "fb_used_gib": 84.90672471788194,
+            "power_total_w": 3263.228,
+            "nvlink_tx_gib_s": 1.8635560332603442,
+            "nvlink_rx_gib_s": 1.857672723456441,
+            "pcie_tx_gib_s": 9.187002433463931e-05,
+            "pcie_rx_gib_s": 0.0001660120013790826
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T14:25:39.322031+00:00",
+          "end": "2026-06-18T14:29:54.537731+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -379,10 +577,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.82686567164177,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.5777777777778
+          "output_tokens_s": 1041.5777777777778,
+          "dcgm": {
+            "gpu_util_pct": 97.625,
+            "sm_active_pct": 15.897241666666668,
+            "tensor_active_pct": 1.9022222222222223,
+            "mem_copy_util_pct": 7.625,
+            "fb_used_gib": 84.90652804904514,
+            "power_total_w": 3348.362111111111,
+            "nvlink_tx_gib_s": 2.553925029165111,
+            "nvlink_rx_gib_s": 2.5539353354057917,
+            "pcie_tx_gib_s": 0.00012672526839499672,
+            "pcie_rx_gib_s": 0.00021733376197516916
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T14:29:55.438653+00:00",
+          "end": "2026-06-18T14:34:17.724105+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -396,7 +608,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 267.04747162022704,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.6055555555556
+          "output_tokens_s": 1437.6055555555556,
+          "dcgm": {
+            "gpu_util_pct": 98.125,
+            "sm_active_pct": 17.999589843749998,
+            "tensor_active_pct": 2.26855703125,
+            "mem_copy_util_pct": 8.984375,
+            "fb_used_gib": 84.90636444091797,
+            "power_total_w": 3569.193875,
+            "nvlink_tx_gib_s": 2.1558043671993627,
+            "nvlink_rx_gib_s": 2.1558236809314364,
+            "pcie_tx_gib_s": 0.0001397852845743545,
+            "pcie_rx_gib_s": 0.00023282884309689205
+          }
         }
       ]
     },
@@ -425,6 +649,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T14:58:35.702123+00:00",
+          "end": "2026-06-18T15:02:47.112458+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -438,10 +664,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.6255319148936,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.48333333333335
+          "output_tokens_s": 345.48333333333335,
+          "dcgm": {
+            "gpu_util_pct": 94.4609375,
+            "sm_active_pct": 11.63656015625,
+            "tensor_active_pct": 1.43067734375,
+            "mem_copy_util_pct": 8.296875,
+            "fb_used_gib": 85.2190170288086,
+            "power_total_w": 3189.955625,
+            "nvlink_tx_gib_s": 1.0502617683132909,
+            "nvlink_rx_gib_s": 1.06312160308784,
+            "pcie_tx_gib_s": 6.605926999506694e-05,
+            "pcie_rx_gib_s": 0.00014880217580383407
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T15:02:47.575332+00:00",
+          "end": "2026-06-18T15:07:03.771336+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -455,10 +695,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 274.1298969072165,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.6277777777777
+          "output_tokens_s": 738.6277777777777,
+          "dcgm": {
+            "gpu_util_pct": 97.625,
+            "sm_active_pct": 15.031022222222221,
+            "tensor_active_pct": 1.7305534722222224,
+            "mem_copy_util_pct": 7.840277777777778,
+            "fb_used_gib": 85.23160129123264,
+            "power_total_w": 3310.7955555555554,
+            "nvlink_tx_gib_s": 1.3991188350327624,
+            "nvlink_rx_gib_s": 1.4805212372875152,
+            "pcie_tx_gib_s": 0.00010369873295227687,
+            "pcie_rx_gib_s": 0.00018279120170821745
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T15:07:04.629682+00:00",
+          "end": "2026-06-18T15:11:19.923982+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -472,10 +726,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.9119402985075,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.8944444444444
+          "output_tokens_s": 1041.8944444444444,
+          "dcgm": {
+            "gpu_util_pct": 95.078125,
+            "sm_active_pct": 16.6061953125,
+            "tensor_active_pct": 1.8811671875000002,
+            "mem_copy_util_pct": 8.2890625,
+            "fb_used_gib": 85.23779296875,
+            "power_total_w": 3396.3375,
+            "nvlink_tx_gib_s": 2.4093438136435688,
+            "nvlink_rx_gib_s": 2.4093320847178497,
+            "pcie_tx_gib_s": 0.00015539711524291532,
+            "pcie_rx_gib_s": 0.00027158923632029637
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T15:11:20.734461+00:00",
+          "end": "2026-06-18T15:15:43.938581+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -489,7 +757,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 266.96800825593397,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.1777777777777
+          "output_tokens_s": 1437.1777777777777,
+          "dcgm": {
+            "gpu_util_pct": 98.15277777777777,
+            "sm_active_pct": 18.411459722222222,
+            "tensor_active_pct": 2.1699395833333335,
+            "mem_copy_util_pct": 9.67361111111111,
+            "fb_used_gib": 85.23751491970486,
+            "power_total_w": 3579.2285555555554,
+            "nvlink_tx_gib_s": 2.33195905017977,
+            "nvlink_rx_gib_s": 2.3319835252710623,
+            "pcie_tx_gib_s": 0.0002152029657736421,
+            "pcie_rx_gib_s": 0.0003182003080534439
+          }
         }
       ]
     },
@@ -518,6 +798,8 @@
       "rates": [
         {
           "rate": 1.0,
+          "start": "2026-06-18T15:19:20.328369+00:00",
+          "end": "2026-06-18T15:23:31.705338+00:00",
           "requests": 235,
           "success": 235,
           "error_pct": 0.0,
@@ -531,10 +813,24 @@
           "input_tokens_avg": 587.6255319148936,
           "output_tokens_avg": 264.2808510638298,
           "input_tokens_s": 767.1777777777778,
-          "output_tokens_s": 345.03333333333336
+          "output_tokens_s": 345.03333333333336,
+          "dcgm": {
+            "gpu_util_pct": 86.51388888888889,
+            "sm_active_pct": 11.10007361111111,
+            "tensor_active_pct": 1.3597881944444445,
+            "mem_copy_util_pct": 6.972222222222222,
+            "fb_used_gib": 85.23691134982639,
+            "power_total_w": 3119.851,
+            "nvlink_tx_gib_s": 0.6874467098134468,
+            "nvlink_rx_gib_s": 0.6983044062146745,
+            "pcie_tx_gib_s": 5.988124344846701e-05,
+            "pcie_rx_gib_s": 0.00013256585632273396
+          }
         },
         {
           "rate": 2.0,
+          "start": "2026-06-18T15:23:32.309458+00:00",
+          "end": "2026-06-18T15:27:48.478626+00:00",
           "requests": 485,
           "success": 485,
           "error_pct": 0.0,
@@ -548,10 +844,24 @@
           "input_tokens_avg": 584.1443298969073,
           "output_tokens_avg": 273.96288659793817,
           "input_tokens_s": 1573.9444444444443,
-          "output_tokens_s": 738.1777777777778
+          "output_tokens_s": 738.1777777777778,
+          "dcgm": {
+            "gpu_util_pct": 97.5,
+            "sm_active_pct": 15.09112890625,
+            "tensor_active_pct": 1.7280757812499998,
+            "mem_copy_util_pct": 7.8359375,
+            "fb_used_gib": 85.23664093017578,
+            "power_total_w": 3325.987625,
+            "nvlink_tx_gib_s": 1.6547402419992503,
+            "nvlink_rx_gib_s": 1.6810883473241751,
+            "pcie_tx_gib_s": 0.0001040074619508925,
+            "pcie_rx_gib_s": 0.00018545656598040037
+          }
         },
         {
           "rate": 3.0,
+          "start": "2026-06-18T15:27:49.479815+00:00",
+          "end": "2026-06-18T15:32:04.651163+00:00",
           "requests": 670,
           "success": 670,
           "error_pct": 0.0,
@@ -565,10 +875,24 @@
           "input_tokens_avg": 584.0880597014925,
           "output_tokens_avg": 279.8328358208955,
           "input_tokens_s": 2174.1055555555554,
-          "output_tokens_s": 1041.6
+          "output_tokens_s": 1041.6,
+          "dcgm": {
+            "gpu_util_pct": 97.75694444444444,
+            "sm_active_pct": 16.577222222222225,
+            "tensor_active_pct": 1.8753020833333331,
+            "mem_copy_util_pct": 8.38888888888889,
+            "fb_used_gib": 85.23649088541667,
+            "power_total_w": 3407.952888888889,
+            "nvlink_tx_gib_s": 2.355700487670644,
+            "nvlink_rx_gib_s": 2.3557000988046637,
+            "pcie_tx_gib_s": 0.00014240374245370427,
+            "pcie_rx_gib_s": 0.00023635356919839978
+          }
         },
         {
           "rate": 4.0,
+          "start": "2026-06-18T15:32:05.608209+00:00",
+          "end": "2026-06-18T15:36:28.807784+00:00",
           "requests": 969,
           "success": 969,
           "error_pct": 0.0,
@@ -582,7 +906,19 @@
           "input_tokens_avg": 586.3003095975232,
           "output_tokens_avg": 266.94014447884416,
           "input_tokens_s": 3156.25,
-          "output_tokens_s": 1437.0277777777778
+          "output_tokens_s": 1437.0277777777778,
+          "dcgm": {
+            "gpu_util_pct": 97.80555555555556,
+            "sm_active_pct": 18.568337500000002,
+            "tensor_active_pct": 2.1967194444444447,
+            "mem_copy_util_pct": 8.819444444444445,
+            "fb_used_gib": 85.23636203342014,
+            "power_total_w": 3523.377111111111,
+            "nvlink_tx_gib_s": 2.4605024584957094,
+            "nvlink_rx_gib_s": 2.4605133538095596,
+            "pcie_tx_gib_s": 0.00023310370027434073,
+            "pcie_rx_gib_s": 0.0003687102944357321
+          }
         }
       ]
     }

@@ -84,6 +84,71 @@ TTFT never approaches the 3,000 ms gate. Saturation is entirely a decode (TPOT) 
 
 Output tokens/s scales roughly linearly with λ across all three variants up to the knee, with overlapping curves — consistent with the same supportable throughput across expert granularities.
 
+## DCGM Telemetry
+
+![DCGM sweep](images/dcgm_sweep.png)
+
+Per-rate means across both replicates. `slurm_job_id` selector pinned per variant; metric windows aligned to each rate level's `server_stats` start/end.
+
+### GPU utilisation %
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 97.3 | 97.4 | 90.5 |
+| 2.0 | 97.9 | 97.6 | 97.6 |
+| 3.0 | 97.9 | 97.9 | 96.4 |
+| 4.0 | 96.7 | 98.3 | 98.0 |
+
+### SM active %
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 12.8 | 11.7 | 11.4 |
+| 2.0 | 14.5 | 14.5 | 15.1 |
+| 3.0 | 16.3 | 15.9 | 16.6 |
+| 4.0 | 17.6 | 18.0 | 18.5 |
+
+### Tensor-pipe active %
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 1.76 | 1.56 | 1.40 |
+| 2.0 | 1.85 | 1.76 | 1.73 |
+| 3.0 | 2.03 | 1.90 | 1.88 |
+| 4.0 | 2.34 | 2.27 | 2.18 |
+
+### Total GPU power, 16 GPUs, W
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 3,276 | 3,201 | 3,155 |
+| 2.0 | 3,340 | 3,288 | 3,318 |
+| 3.0 | 3,467 | 3,357 | 3,402 |
+| 4.0 | 3,464 | 3,552 | 3,551 |
+
+Framebuffer used was ~84.6–85.2 GiB/GPU across all variants, essentially flat — checkpoint footprint is matched by construction.
+
+`DCGM_FI_DEV_GPU_UTIL` is near-saturation (~98%) at every measured λ for every variant, but `DCGM_FI_PROF_SM_ACTIVE` and `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE` stay low (<19% and <2.4% respectively). This is the expected fingerprint of sparse-activation MoE serving on this hardware: the device is busy but compute pipes spend most of the time waiting on routing, memory, and cross-rank exchange, not on dense matmuls.
+
+## Communication
+
+![Communication sweep](images/comm_sweep.png)
+
+Intra-node NVLink TX/RX bytes via `DCGM_FI_PROF_NVLINK_{TX,RX}_BYTES`, summed across all 16 GPUs and rate'd over each rate level's measurement window. PCIe counters are reported but stay below ~1 MiB/s for all rates (GH200's unified CPU/GPU memory keeps PCIe traffic near zero).
+
+### NVLink TX, GiB/s aggregate (16 GPUs)
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 0.68 | 0.69 | 0.87 |
+| 2.0 | 1.65 | 1.95 | 1.53 |
+| 3.0 | 1.86 | 2.57 | 2.38 |
+| 4.0 | 2.12 | 2.58 | 2.40 |
+
+NVLink RX values mirror TX within ~0.02 GiB/s (symmetric all-to-all). NVLink traffic scales monotonically with offered load and stays similar across variants. The expected "more experts → more dispatch" effect does **not** show up cleanly in NVLink alone: the cross-node all-to-all in this EP=16/4-node topology dominates the dispatch path, and that traffic goes over the HPE Slingshot 11 fabric, which DCGM does not expose here. NVLink only carries the post-Slingshot intra-node share, so it is not a faithful proxy for total dispatch volume.
+
+The flat NVLink scaling — combined with low SM/Tensor activity — is consistent with the deployment being limited by all-to-all dispatch + decode-stage memory traffic, not by on-GPU compute. This matches the TPOT-bound saturation behaviour visible in the latency tables.
+
 ## Interpretation
 
 - **Saturation throughput.** Identical across N=32/64/128: all three variants pass at λ=3 and breach at λ=4 under the same SLOs. The supportable RPS is unchanged.
@@ -101,7 +166,7 @@ Output tokens/s scales roughly linearly with λ across all three variants up to 
 - Adaptive early-stop terminates 1 level past first breach; supportable throughput beyond λ=4 was not characterised for any variant.
 - `N=256, k=16` excluded — comparable ~346B size requires `moe_intermediate_size=1024`, which does not satisfy strict TP16 FP8 alignment (`% (128 * TP) == 0`). See `NOTES.md`.
 - All three variants were replicated N=2. The N=32/k=2 run 1 hit a benign primer-warmup `http_400` because the IBT `max_model_len` (8,192) exceeded the SGLang default context length (4,096); this affected only the synthetic warmup request, not measured traffic (medium prompts max 1,412 input+output tokens, well within 4,096). Run 2 was executed after aligning `max_model_len=4,096` in the IBT config and reproduced the knee within ~2 ms TPOT p95.
-- DCGM `hardware_stats` rows are empty for these runs — no GPU-utilisation/power telemetry is included alongside the latency data.
+- Cross-node Slingshot 11 traffic is not exposed in DCGM, so the Communication section captures only intra-node NVLink. Total MoE dispatch volume is therefore under-reported.
 - One N=64/k=4 attempt (`2561168`) failed because the API gateway listed the model in `/v1/models` before the upstream provider was actually serving. The benchmark hit `http_503` on every request and was discarded. The workflow now requires an actual `/v1/chat/completions` probe before submission (see `BENCHMARK_WORKFLOW.md`).
 
 ## Provenance
