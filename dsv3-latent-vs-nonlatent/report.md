@@ -176,9 +176,9 @@ Intra-node NVLink TX/RX bytes via `DCGM_FI_PROF_NVLINK_{TX,RX}_BYTES`, summed ac
 |---|---|
 | ![PCIe TX](images/comm_pcie_tx.png) | ![PCIe RX](images/comm_pcie_rx.png) |
 
-| Slingshot TX | Slingshot RX |
+| Slingshot packets/s (TX / RX) | Slingshot bytes/s (diagnostic, log scale) |
 |---|---|
-| ![Slingshot TX](images/comm_slingshot_tx.png) | ![Slingshot RX](images/comm_slingshot_rx.png) |
+| ![Slingshot packets](images/comm_slingshot_packets.png) | ![Slingshot bytes](images/comm_slingshot_bytes.png) |
 
 ### NVLink TX, GiB/s aggregate (16 GPUs)
 
@@ -189,14 +189,14 @@ Intra-node NVLink TX/RX bytes via `DCGM_FI_PROF_NVLINK_{TX,RX}_BYTES`, summed ac
 | 3.0 | 2.33 | — | — |
 | 4.0 | 3.60 | — | — |
 
-### Slingshot RX, GiB/s aggregate (all HSN interfaces, 4 nodes)
+### Slingshot packet rates, aggregate (all HSN interfaces, 4 nodes)
 
-| λ | Non-latent | Latent (wider) | Latent (more experts) |
-|---:|---:|---:|---:|
-| 1.0 | 0.00035 | 0.00237 | 0.00000 |
-| 2.0 | 0.00035 | 0.00039 | 0.00000 |
+| λ | Non-latent TX | Non-latent RX | Latent (wider) TX | Latent (wider) RX | Latent (more experts) TX | Latent (more experts) RX |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1.0 | 2,883 | 4,456 | 2,487 | 40,983 | 2,693 | 4,353 |
+| 2.0 | 2,554 | 3,882 | 2,320 | 5,263 | 2,430 | 3,847 |
 
-The Slingshot byte counters are noisy and frequently round to zero with the current `rate()` window; the absolute values are too small to faithfully represent the all-to-all volume. This is likely an averaging/smoothing artifact over the 180–260 s measurement windows, combined with bursty dispatch. The packet-rate counters are more stable (~2,300–45,000 pkt/s) but do not show a clear latency-correlated pattern.
+The Slingshot byte counters are noisy and frequently round to zero with the current `rate()` window, so the primary Slingshot view now uses packet rates. Packet rates are far more stable (~2,300–78,000 pkt/s). The latent N=64/k=4 replicate 1 shows a large RX packet spike at λ=1 (~78,000 pkt/s) that is not reproduced in replicate 2 or in the N=224 variant; treating it as an outlier, the three variants sit in a similar packet-rate band. This suggests the Slingshot fabric is not the differentiating bottleneck.
 
 NVLink traffic is lower for both latent variants, which is expected because the all-to-all hidden-state volume is reduced from 7,168 to 2,048. However, the reduction in communication does not translate into better throughput because the compute path is less efficient.
 

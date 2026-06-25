@@ -364,14 +364,92 @@ def generate_plots(data: dict) -> None:
         ("nvlink_rx_gib_s", "NVLink RX (GiB/s, summed across 16 GPUs)", "comm_nvlink_rx"),
         ("pcie_tx_gib_s", "PCIe TX (GiB/s, summed across 16 GPUs)", "comm_pcie_tx"),
         ("pcie_rx_gib_s", "PCIe RX (GiB/s, summed across 16 GPUs)", "comm_pcie_rx"),
-        ("slingshot_tx_gib_s", "Slingshot TX (GiB/s, summed across all HSN interfaces)", "comm_slingshot_tx"),
-        ("slingshot_rx_gib_s", "Slingshot RX (GiB/s, summed across all HSN interfaces)", "comm_slingshot_rx"),
     ]
     for metric, label, filename in comm_panels:
-        category = "slingshot" if "slingshot" in metric else "dcgm"
-        fig = _plot_metric_panel(g, rates, metric, label, category, None, None)
+        fig = _plot_metric_panel(g, rates, metric, label, "dcgm", None, None)
         fig.savefig(IMAGES / f"{filename}.png", dpi=180)
         plt.close(fig)
+
+    # Slingshot: packet rates are far more stable than byte counters on this cluster.
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharex=True)
+    for ax, metric, label in [
+        (axes[0], "slingshot_tx_packets_s", "TX packets/s"),
+        (axes[1], "slingshot_rx_packets_s", "RX packets/s"),
+    ]:
+        for variant in VARIANT_ORDER:
+            reps = g.get(variant, {})
+            xs, means, stds = [], [], []
+            for rate in rates:
+                vals = [
+                    reps[r].get(rate, {}).get("slingshot", {}).get(metric)
+                    for r in reps
+                ]
+                m, s = mean_std(vals)
+                if m is not None:
+                    xs.append(rate)
+                    means.append(m)
+                    stds.append(s or 0)
+            ax.errorbar(
+                xs,
+                means,
+                yerr=stds,
+                marker="o",
+                linewidth=2,
+                capsize=4,
+                label=VARIANT_LABELS[variant],
+                color=VARIANT_COLORS[variant],
+            )
+        ax.set_xlabel("λ (requests/s)")
+        ax.set_ylabel(label)
+        ax.set_yscale("log")
+        ax.grid(True, alpha=0.25)
+        ax.legend()
+    fig.tight_layout()
+    fig.savefig(IMAGES / "comm_slingshot_packets.png", dpi=180)
+    plt.close(fig)
+
+    # Keep the raw byte plots as a diagnostic, but log-scale and with a note.
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharex=True)
+    for ax, metric, label in [
+        (axes[0], "slingshot_tx_gib_s", "TX GiB/s"),
+        (axes[1], "slingshot_rx_gib_s", "RX GiB/s"),
+    ]:
+        for variant in VARIANT_ORDER:
+            reps = g.get(variant, {})
+            xs, means, stds = [], [], []
+            for rate in rates:
+                vals = [
+                    reps[r].get(rate, {}).get("slingshot", {}).get(metric)
+                    for r in reps
+                ]
+                m, s = mean_std(vals)
+                if m is not None:
+                    xs.append(rate)
+                    means.append(m)
+                    stds.append(s or 0)
+            ax.errorbar(
+                xs,
+                means,
+                yerr=stds,
+                marker="o",
+                linewidth=2,
+                capsize=4,
+                label=VARIANT_LABELS[variant],
+                color=VARIANT_COLORS[variant],
+            )
+        ax.set_xlabel("λ (requests/s)")
+        ax.set_ylabel(label)
+        ax.set_yscale("log")
+        ax.grid(True, alpha=0.25)
+        ax.legend()
+    fig.suptitle(
+        "Slingshot byte counters are noisy/under-reported on this cluster (log scale)",
+        fontsize=10,
+        y=0.98,
+    )
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(IMAGES / "comm_slingshot_bytes.png", dpi=180)
+    plt.close(fig)
 
 
 def main() -> int:
@@ -404,8 +482,8 @@ def main() -> int:
             "comm_nvlink_rx",
             "comm_pcie_tx",
             "comm_pcie_rx",
-            "comm_slingshot_tx",
-            "comm_slingshot_rx",
+            "comm_slingshot_packets",
+            "comm_slingshot_bytes",
         ]:
             print(f"wrote {IMAGES.relative_to(ROOT.parent.parent)}/{filename}.png")
     return 0
