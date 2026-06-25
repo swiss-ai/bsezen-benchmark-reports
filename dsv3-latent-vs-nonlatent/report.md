@@ -26,8 +26,9 @@ Holding total parameters and active routed-expert parameters constant, does addi
 | Effect of latent shape | N=224/k=14 is slightly faster than N=64/k=14,336 at λ=2, but still breaches the 80 ms SLO |
 | TTFT overhead of latent | ~2–3× higher than non-latent at matched λ |
 | Error rate | 0% at every measured level for every variant |
+| Most likely bottleneck | Inefficient/unfused latent-MoE kernel work, not communication |
 
-The latent projection reduces the all-to-all hidden-state volume from 7,168 to 2,048, but both ways of keeping parameter counts matched — wider experts or more experts — end up roughly twice as slow as the non-latent baseline under the same TPOT SLO. The slowdown persists even with GPU-friendly expert shapes, pointing to the unfused down/up projections and/or untrained weights as the dominant cause.
+The latent projection reduces the all-to-all hidden-state volume from 7,168 to 2,048, but both ways of keeping parameter counts matched — wider experts or more experts — end up roughly twice as slow as the non-latent baseline under the same TPOT SLO. The communication reduction is visible in NVLink telemetry, so the intended latent-MoE benefit is real. However, the current implementation does not convert that reduction into better serving performance. The most likely explanation is inefficient/unfused latent-MoE kernel work: separate down/up projections and surrounding quantization/matmul activity add enough compute and memory traffic to dominate the communication savings.
 
 ## Methodology
 
@@ -200,16 +201,45 @@ The Slingshot byte counters are noisy and frequently round to zero with the curr
 
 NVLink traffic is lower for both latent variants, which is expected because the all-to-all hidden-state volume is reduced from 7,168 to 2,048. However, the reduction in communication does not translate into better throughput because the compute path is less efficient.
 
+## Nsight Systems Profiling
+
+To test whether the regression was caused by communication or kernel work, we profiled the non-latent baseline and the better-shaped latent N=224/k=14 variant with Nsight Systems on 4 GH200 nodes. The final working setup used delay/duration capture rather than SGLang's `/start_profile` API, because SGLang only calls `cudaProfilerStart()` on `gpu_id == base_gpu_id`; relying on that API would leave most multi-node ranks uncaptured. The profiles therefore use a fixed delay window with loadtest traffic overlapping the capture interval.
+
+| Variant | Profile job | Valid kernel summaries | Notes |
+|---|---:|---:|---|
+| Non-latent N=64/k=4 | 2622329 | 3 / 4 | One report failed SQLite export with `Section Table Reference magic number mismatch` |
+| Latent N=224/k=14 | 2622440 | 2 / 4 | Two reports failed SQLite export with the same nsys export error |
+
+The valid kernel summaries are sufficient for a directional comparison, but not a perfect rank-complete profile. The percentages below are from representative valid reports and should be interpreted as profiling-window evidence rather than exact whole-job accounting.
+
+### Representative kernel summaries
+
+| Kernel group / top kernel | Non-latent N=64/k=4 | Latent N=224/k=14 | Interpretation |
+|---|---:|---:|---|
+| NCCL ring all-reduce | ~48–50% | ~21% | Non-latent is dominated by ring all-reduce in the sampled window |
+| NCCL tree all-reduce | Not in top rows | ~13.5% | Latent shifts communication mix, but communication is not the sole bottleneck |
+| FlashInfer top-k/top-p sampling | ~12–13% | ~44% | Percentage is sensitive to request progress during the window; compare cautiously |
+| `fused_moe_kernel` total time | ~0.40–0.44 s | ~0.99–1.06 s | Latent spends more absolute GPU time in the MoE path |
+| `fused_moe_kernel` instances | 2,784 | 5,104 | Latent executes more MoE-kernel work in the sampled window |
+| FP8 quantization kernels | Present | Higher instance count / total activity | Consistent with extra latent-path quantization/matmul work |
+
+The profiles did not reveal an unexpected communication bottleneck. Instead, they support the telemetry-based interpretation: communication volume decreases, but the latent compute path becomes worse. The projection kernels do not appear as cleanly named `down_proj` or `up_proj` rows in the top-level nsys summaries, so the profiles do not prove that the projections alone are the bottleneck. They do show extra and more expensive MoE/quantization/matmul work in the latent path, which is consistent with an unfused projection wrapper around an MoE kernel that was originally optimized for the standard non-latent dataflow.
+
+This is also consistent with the contrast to production latent-MoE systems: reported latent-MoE speedups rely on custom/fused kernels that integrate projection, routing, expert compute, quantization, and communication. A simple functional wrapper around existing experts can reduce communication while still losing end-to-end because it introduces additional kernel launches and HBM round-trips.
+
 ## Interpretation
 
 - **Saturation throughput.** Non-latent supports roughly twice the request rate of either latent variant under the same TPOT p95 SLO (λ=4 vs λ=2). Changing the latent shape from wider experts to more experts does not move the knee.
 - **Latency at low load.** Even at λ=1, both latent variants have ~40–75 % higher TPOT p95 than non-latent. The extra projection layers add per-token overhead that is visible before queueing effects appear.
 - **Effect of shape.** At λ=2 the N=224/k=14 latent variant is slightly faster than the N=64/k=14,336 variant (TPOT p95 ~83–88 ms vs ~94–102 ms), and its λ=1 GPU utilisation is higher (~85 % vs ~77 %). This confirms that the skinny/wide GEMM shape hurts occupancy, but the improvement is not enough to recover the non-latent performance.
 - **TTFT.** Both latent variants show 2–3× higher TTFT than non-latent, indicating the prefilling stage is slowed by the latent path.
-- **GPU efficiency.** The N=224 variant has SM/tensor activity close to non-latent, yet it still saturates at λ=2. This suggests the remaining overhead is not GEMM occupancy but the unfused down/up projections (extra HBM round-trips per layer) and/or the untrained projection weights.
-- **Communication.** The all-to-all volume reduction is real (lower NVLink), but it is not the bottleneck on this topology/workload. The compute/memory overhead of the latent path dominates.
+- **GPU efficiency.** The N=224 variant has SM/tensor activity close to non-latent, yet it still saturates at λ=2. This suggests the remaining overhead is not simply poor GEMM occupancy. The nsys summaries show more absolute MoE-path kernel work and more quantization/matmul activity in the latent variant.
+- **Communication.** The all-to-all volume reduction is real (lower NVLink), but it is not the differentiating bottleneck on this topology/workload. The compute/memory overhead of the latent path dominates.
+- **Kernel path.** The most likely cause is inefficient/unfused latent-MoE kernel work, including the down/up projections and surrounding FP8 quantization/matmul path. The current evidence does not isolate the projections as the only cause, but it strongly supports the broader conclusion that a simple projection wrapper is not enough to realize latent-MoE serving gains.
 
 **Answer to the research question.** Holding total and active routed-expert parameters constant, adding a `latent_moe_dim = 2048` projection around the MoE block **harms** inference throughput and latency on this SGLang serving stack, regardless of whether the parameter budget is preserved by widening experts or by adding more experts. Both latent variants saturate at half the request rate of the non-latent baseline.
+
+This should be interpreted as a negative result for this implementation and serving stack, not as a negative result for latent MoE as an architecture. The architecture-level communication savings appear, but the current kernel path gives them back and more.
 
 ## Why the latent variants are slower
 
@@ -241,8 +271,9 @@ The N=224/k=14 variant uses the same 2,048-dim latent space but keeps the expert
 
 Because the N=224 variant has good GEMM occupancy but still loses to non-latent, the dominant inefficiency is likely:
 
-1. **Unfused projections.** The custom SGLang patch adds separate down/up linear layers around the MoE block, writing the latent tensor to HBM and reading it back twice per layer.
-2. **Untrained weights.** Random/tiled weights mean the latent projection is not learned to preserve task-relevant feature structure.
+1. **Unfused latent-MoE kernel work.** The custom SGLang patch adds separate down/up linear layers around the MoE block instead of using a fused latent-MoE kernel. This likely introduces extra kernel launches, quantization/matmul work, and HBM round-trips.
+2. **Projection overhead.** The down/up projections are always active and appear to increase the MoE-path compute footprint, though the current top-level nsys summaries do not isolate them under projection-specific kernel names.
+3. **Untrained weights.** Random/tiled weights mean the latent projection is not learned to preserve task-relevant feature structure.
 
 The 8 % extra parameters from the projections are a secondary effect.
 
@@ -256,7 +287,7 @@ This result should not be read as a general verdict on latent MoE. Several piece
 
 **Why this benchmark shows the opposite.** The discrepancy is explained by implementation choices in our controlled comparison:
 
-1. **Unfused projections.** The custom SGLang patch adds separate down/up linear layers around the MoE block, writing the latent tensor to HBM and reading it back twice per layer. Production latent-MoE kernels fuse these projections into the dispatch/combine path.
+1. **Unfused kernel path.** The custom SGLang patch adds separate down/up linear layers around the MoE block. Production latent-MoE implementations typically need custom/fused kernels that integrate projection, dispatch/combine, expert compute, quantization, and communication.
 2. **Untrained weights.** The checkpoints use random/tiled FP8 weights, so the latent projection is not learned to preserve task-relevant feature structure. A trained latent projection can use a much smaller latent dimension without quality loss.
 3. **No shape rescue.** We tested two ways of matching parameter budgets (wider experts vs more experts). The more-experts shape improves GPU occupancy but still does not close the latency gap, confirming that shape alone is not the fix.
 
