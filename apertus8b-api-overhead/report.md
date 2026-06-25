@@ -28,7 +28,9 @@ Only the endpoint path changed between paired runs. The same served model, promp
 
 ## Results
 
-![Latency p95](images/latency_p95.png)
+![TTFT p95](images/ttft_p95.png)
+
+![TPOT p95](images/tpot_p95.png)
 
 ### TTFT p95 (ms, mean ± std)
 
@@ -103,4 +105,4 @@ DCGM telemetry is queried by served-model SLURM job ID and aligned to each bench
 - λ=24 is saturated in both paths, so API overhead should be interpreted mainly at λ=8 and λ=16.
 - Client event-loop lag warnings appeared at λ=24, which reinforces treating the saturated point as overload evidence rather than a precise latency estimate.
 
-Generated: 2026-06-18T21:55:27.030456+00:00
+Generated: 2026-06-25T10:43:07.104284+00:00

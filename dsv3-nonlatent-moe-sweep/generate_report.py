@@ -243,47 +243,25 @@ def all_rates(data: dict) -> list[float]:
     return sorted(rates)
 
 
-def generate_plots(data: dict) -> None:
-    if plt is None:
-        print("matplotlib not installed; skipping plots")
-        return
-    g = grouped(data)
-    rates = all_rates(data)
+def _plot_variant_series(ax, g: dict, rates: list[float], metric_path: list[str]) -> None:
+    """Plot mean±std series for each variant on the given axes.
 
-    fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
-    for metric, ax, slo, label in [
-        ("ttft_p95_ms", axes[0], SLOS["ttft_p95_ms"], "TTFT p95 (ms)"),
-        ("tpot_p95_ms", axes[1], SLOS["tpot_p95_ms"], "TPOT p95 (ms)"),
-    ]:
-        for variant in VARIANT_ORDER:
-            reps = g.get(variant, {})
-            means, stds = [], []
-            for rate in rates:
-                vals = [reps[r].get(rate, {}).get(metric) for r in reps]
-                m, s = mean_std(vals)
-                means.append(m)
-                stds.append(s or 0)
-            ax.errorbar(
-                rates, means, yerr=stds,
-                marker="o", linewidth=2, capsize=4,
-                label=variant, color=VARIANT_COLORS[variant],
-            )
-        ax.axhline(slo, color="#cc0000", linestyle="--", label=f"SLO {slo:g} ms")
-        ax.set_yscale("log")
-        ax.set_ylabel(label)
-        ax.grid(True, alpha=0.25)
-    axes[1].set_xlabel("λ (requests/s)")
-    axes[0].legend()
-    fig.tight_layout()
-    fig.savefig(IMAGES / "latency_p95_sweep.png", dpi=180)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(9, 5))
+    metric_path is the sequence of dict keys to reach the value, e.g.
+    ["dcgm", "gpu_util_pct"] or ["output_tokens_s"].
+    """
     for variant in VARIANT_ORDER:
         reps = g.get(variant, {})
         means, stds = [], []
         for rate in rates:
-            vals = [reps[r].get(rate, {}).get("output_tokens_s") for r in reps]
+            vals: list[float | None] = []
+            for rep in reps.values():
+                val: object = rep.get(rate, {})
+                for key in metric_path:
+                    if not isinstance(val, dict):
+                        val = None
+                        break
+                    val = val.get(key)
+                vals.append(val if isinstance(val, (int, float)) else None)
             m, s = mean_std(vals)
             means.append(m)
             stds.append(s or 0)
@@ -292,71 +270,98 @@ def generate_plots(data: dict) -> None:
             marker="o", linewidth=2, capsize=4,
             label=variant, color=VARIANT_COLORS[variant],
         )
-    ax.set_xlabel("λ (requests/s)")
-    ax.set_ylabel("Output tokens/s")
+
+
+def _single_metric_plot(
+    g: dict,
+    rates: list[float],
+    metric_path: list[str],
+    ylabel: str,
+    filename: str,
+    xlabel: str = "λ (requests/s)",
+    logy: bool = False,
+) -> Path | None:
+    """Create a single-panel plot and save it to images/filename."""
+    if plt is None:
+        return None
+    fig, ax = plt.subplots(figsize=(9, 5))
+    _plot_variant_series(ax, g, rates, metric_path)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if logy:
+        ax.set_yscale("log")
     ax.grid(True, alpha=0.25)
     ax.legend()
     fig.tight_layout()
-    fig.savefig(IMAGES / "throughput_sweep.png", dpi=180)
+    path = IMAGES / filename
+    fig.savefig(path, dpi=180)
     plt.close(fig)
+    return path
+
+
+def generate_plots(data: dict) -> list[Path]:
+    if plt is None:
+        print("matplotlib not installed; skipping plots")
+        return []
+    g = grouped(data)
+    rates = all_rates(data)
+    written: list[Path] = []
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 10), sharex=True)
+    for metric, ax, slo, label in [
+        ("ttft_p95_ms", axes[0], SLOS["ttft_p95_ms"], "TTFT p95 (ms)"),
+        ("tpot_p95_ms", axes[1], SLOS["tpot_p95_ms"], "TPOT p95 (ms)"),
+    ]:
+        _plot_variant_series(ax, g, rates, [metric])
+        ax.axhline(slo, color="#cc0000", linestyle="--", label=f"SLO {slo:g} ms")
+        ax.set_yscale("log")
+        ax.set_ylabel(label)
+        ax.grid(True, alpha=0.25)
+    axes[1].set_xlabel("λ (requests/s)")
+    axes[0].legend()
+    fig.tight_layout()
+    latency_path = IMAGES / "latency_p95_sweep.png"
+    fig.savefig(latency_path, dpi=180)
+    plt.close(fig)
+    written.append(latency_path)
+
+    tp_path = _single_metric_plot(
+        g, rates, ["output_tokens_s"],
+        "Output tokens/s", "throughput_sweep.png",
+    )
+    if tp_path:
+        written.append(tp_path)
 
     dcgm_panels = [
-        ("gpu_util_pct", "GPU util %"),
-        ("sm_active_pct", "SM active %"),
-        ("tensor_active_pct", "Tensor active %"),
-        ("power_total_w", "Total GPU power (W, 16 GPUs)"),
+        ("gpu_util_pct", "GPU util %", "dcgm_gpu_util.png"),
+        ("sm_active_pct", "SM active %", "dcgm_sm_active.png"),
+        ("tensor_active_pct", "Tensor active %", "dcgm_tensor_active.png"),
+        ("mem_copy_util_pct", "Memory copy util %", "dcgm_mem_copy_util.png"),
+        ("power_total_w", "Total GPU power (W, 16 GPUs)", "dcgm_power_total.png"),
     ]
-    fig, axes = plt.subplots(len(dcgm_panels), 1, figsize=(9, 11), sharex=True)
-    for (metric, label), ax in zip(dcgm_panels, axes):
-        for variant in VARIANT_ORDER:
-            reps = g.get(variant, {})
-            means, stds = [], []
-            for rate in rates:
-                vals = [reps[r].get(rate, {}).get("dcgm", {}).get(metric) for r in reps]
-                m, s = mean_std(vals)
-                means.append(m)
-                stds.append(s or 0)
-            ax.errorbar(
-                rates, means, yerr=stds,
-                marker="o", linewidth=2, capsize=4,
-                label=variant, color=VARIANT_COLORS[variant],
-            )
-        ax.set_ylabel(label)
-        ax.grid(True, alpha=0.25)
-    axes[-1].set_xlabel("λ (requests/s)")
-    axes[0].legend()
-    fig.tight_layout()
-    fig.savefig(IMAGES / "dcgm_sweep.png", dpi=180)
-    plt.close(fig)
+    for metric, ylabel, filename in dcgm_panels:
+        path = _single_metric_plot(
+            g, rates, ["dcgm", metric],
+            ylabel, filename,
+        )
+        if path:
+            written.append(path)
 
     comm_panels = [
-        ("nvlink_tx_gib_s", "NVLink TX (GiB/s, summed across 16 GPUs)"),
-        ("nvlink_rx_gib_s", "NVLink RX (GiB/s, summed across 16 GPUs)"),
-        ("pcie_tx_gib_s",   "PCIe TX (GiB/s, summed across 16 GPUs)"),
-        ("pcie_rx_gib_s",   "PCIe RX (GiB/s, summed across 16 GPUs)"),
+        ("nvlink_tx_gib_s", "NVLink TX (GiB/s, summed across 16 GPUs)", "comm_nvlink_tx.png"),
+        ("nvlink_rx_gib_s", "NVLink RX (GiB/s, summed across 16 GPUs)", "comm_nvlink_rx.png"),
+        ("pcie_tx_gib_s", "PCIe TX (GiB/s, summed across 16 GPUs)", "comm_pcie_tx.png"),
+        ("pcie_rx_gib_s", "PCIe RX (GiB/s, summed across 16 GPUs)", "comm_pcie_rx.png"),
     ]
-    fig, axes = plt.subplots(len(comm_panels), 1, figsize=(9, 11), sharex=True)
-    for (metric, label), ax in zip(comm_panels, axes):
-        for variant in VARIANT_ORDER:
-            reps = g.get(variant, {})
-            means, stds = [], []
-            for rate in rates:
-                vals = [reps[r].get(rate, {}).get("dcgm", {}).get(metric) for r in reps]
-                m, s = mean_std(vals)
-                means.append(m)
-                stds.append(s or 0)
-            ax.errorbar(
-                rates, means, yerr=stds,
-                marker="o", linewidth=2, capsize=4,
-                label=variant, color=VARIANT_COLORS[variant],
-            )
-        ax.set_ylabel(label)
-        ax.grid(True, alpha=0.25)
-    axes[-1].set_xlabel("λ (requests/s)")
-    axes[0].legend()
-    fig.tight_layout()
-    fig.savefig(IMAGES / "comm_sweep.png", dpi=180)
-    plt.close(fig)
+    for metric, ylabel, filename in comm_panels:
+        path = _single_metric_plot(
+            g, rates, ["dcgm", metric],
+            ylabel, filename,
+        )
+        if path:
+            written.append(path)
+
+    return written
 
 
 def main() -> None:
@@ -371,10 +376,9 @@ def main() -> None:
     out = ROOT / "data.json"
     out.write_text(json.dumps(data, indent=2, default=str))
     print(f"wrote {out.relative_to(ROOT.parent.parent)}")
-    generate_plots(data)
-    if plt is not None:
-        print(f"wrote {IMAGES.relative_to(ROOT.parent.parent)}/latency_p95_sweep.png")
-        print(f"wrote {IMAGES.relative_to(ROOT.parent.parent)}/throughput_sweep.png")
+    plot_paths = generate_plots(data)
+    for path in plot_paths:
+        print(f"wrote {path.relative_to(ROOT.parent.parent)}")
 
 
 if __name__ == "__main__":

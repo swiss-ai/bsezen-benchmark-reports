@@ -188,34 +188,51 @@ def table(data: dict, metric: str, dcgm: bool = False) -> str:
     return "\n".join(lines)
 
 
+def _plot_latency_metric(
+    g: dict[str, dict[int, dict[float, dict]]],
+    rates: list[float],
+    metric: str,
+    slo: float,
+    label: str,
+    filename: str,
+) -> None:
+    colors = {"Direct": "#0072B2", "API": "#D55E00"}
+    fig, ax = plt.subplots(figsize=(10, 6), constrained_layout=True)
+    for path in ["Direct", "API"]:
+        means, lows, highs = [], [], []
+        for rate in rates:
+            m, s = mean_std([g[path][rep][rate].get(metric) for rep in g[path]])
+            means.append(m)
+            lows.append(s or 0)
+            highs.append(s or 0)
+        ax.errorbar(
+            rates,
+            means,
+            yerr=[lows, highs],
+            marker="o",
+            linewidth=2,
+            capsize=4,
+            label=path,
+            color=colors[path],
+        )
+    ax.axhline(slo, color="#cc0000", linestyle="--", label=f"SLO {slo:g} ms")
+    ax.set_yscale("log")
+    ax.set_xlabel("λ (requests/s)")
+    ax.set_ylabel(label)
+    ax.set_title(f"{label} vs request rate")
+    ax.grid(True, alpha=0.25)
+    ax.legend()
+    fig.savefig(IMAGES / filename, dpi=180)
+    plt.close(fig)
+
+
 def generate_plots(data: dict) -> None:
     if plt is None:
         return
     g = grouped(data)
     rates = [8.0, 16.0, 24.0]
-    colors = {"Direct": "#0072B2", "API": "#D55E00"}
-    fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
-    for metric, ax, slo, label in [
-        ("ttft_p95_ms", axes[0], 10000, "TTFT p95 (ms)"),
-        ("tpot_p95_ms", axes[1], 200, "TPOT p95 (ms)"),
-    ]:
-        for path in ["Direct", "API"]:
-            means, lows, highs = [], [], []
-            for rate in rates:
-                m, s = mean_std([g[path][rep][rate].get(metric) for rep in g[path]])
-                means.append(m)
-                lows.append(s or 0)
-                highs.append(s or 0)
-            ax.errorbar(rates, means, yerr=[lows, highs], marker="o", linewidth=2, capsize=4, label=path, color=colors[path])
-        ax.axhline(slo, color="#cc0000", linestyle="--", label=f"SLO {slo:g} ms")
-        ax.set_yscale("log")
-        ax.set_ylabel(label)
-        ax.grid(True, alpha=0.25)
-    axes[1].set_xlabel("λ (requests/s)")
-    axes[0].legend()
-    fig.tight_layout()
-    fig.savefig(IMAGES / "latency_p95.png", dpi=180)
-    plt.close(fig)
+    _plot_latency_metric(g, rates, "ttft_p95_ms", 10000, "TTFT p95 (ms)", "ttft_p95.png")
+    _plot_latency_metric(g, rates, "tpot_p95_ms", 200, "TPOT p95 (ms)", "tpot_p95.png")
 
 
 def write_report(data: dict) -> None:
@@ -249,7 +266,9 @@ Only the endpoint path changed between paired runs. The same served model, promp
 
 ## Results
 
-![Latency p95](images/latency_p95.png)
+![TTFT p95](images/ttft_p95.png)
+
+![TPOT p95](images/tpot_p95.png)
 
 ### TTFT p95 (ms, mean ± std)
 

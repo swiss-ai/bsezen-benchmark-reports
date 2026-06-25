@@ -214,7 +214,7 @@ def generate_plots(data: dict) -> None:
     colors = {"vLLM": "#0072B2", "SGLang": "#D55E00"}
     rates = [2.0, 4.0, 8.0, 12.0]
 
-    fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(9, 7), sharex=True)
     for metric, ax, slo, label in [
         ("ttft_p95_ms", axes[0], 10000, "TTFT p95 (ms)"),
         ("tpot_p95_ms", axes[1], 200, "TPOT p95 (ms)"),
@@ -234,10 +234,10 @@ def generate_plots(data: dict) -> None:
     axes[1].set_xlabel("λ (requests/s)")
     axes[0].legend()
     fig.tight_layout()
-    fig.savefig(IMAGES / "latency_p95_replicates.png", dpi=180)
+    fig.savefig(IMAGES / "latency_p95_replicates.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
 
-    fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(9, 7), sharex=True)
     for metric, ax, label in [
         ("input_tokens_s", axes[0], "Input tokens/s"),
         ("output_tokens_s", axes[1], "Output tokens/s"),
@@ -255,12 +255,19 @@ def generate_plots(data: dict) -> None:
     axes[1].set_xlabel("λ (requests/s)")
     axes[0].legend()
     fig.tight_layout()
-    fig.savefig(IMAGES / "throughput_replicates.png", dpi=180)
+    fig.savefig(IMAGES / "throughput_replicates.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
 
-    dcgm_metrics = [("gpu_util_pct", "GPU util %"), ("sm_active_pct", "SM active %"), ("tensor_active_pct", "Tensor active %"), ("power_total_w", "Total power W")]
-    fig, axes = plt.subplots(len(dcgm_metrics), 1, figsize=(9, 11), sharex=True)
-    for (metric, label), ax in zip(dcgm_metrics, axes):
+    dcgm_metrics = [
+        ("gpu_util_pct", "GPU util %"),
+        ("sm_active_pct", "SM active %"),
+        ("tensor_active_pct", "Tensor active %"),
+        ("mem_copy_util_pct", "Memory copy util %"),
+        ("fb_used_gib", "Framebuffer used GiB"),
+        ("power_total_w", "Total power W"),
+    ]
+    for metric, label in dcgm_metrics:
+        fig, ax = plt.subplots(1, 1, figsize=(8, 4.5))
         for engine, reps in g.items():
             means, lows, highs = [], [], []
             for rate in rates:
@@ -270,13 +277,13 @@ def generate_plots(data: dict) -> None:
                 lows.append(s or 0)
                 highs.append(s or 0)
             ax.errorbar(rates, means, yerr=[lows, highs], marker="o", linewidth=2, capsize=4, label=engine, color=colors[engine])
+        ax.set_xlabel("λ (requests/s)")
         ax.set_ylabel(label)
         ax.grid(True, alpha=0.25)
-    axes[-1].set_xlabel("λ (requests/s)")
-    axes[0].legend()
-    fig.tight_layout()
-    fig.savefig(IMAGES / "dcgm_replicates.png", dpi=180)
-    plt.close(fig)
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(IMAGES / f"dcgm_{metric}_replicates.png", dpi=180, bbox_inches="tight")
+        plt.close(fig)
 
 
 def fmt(value: float | None, digits: int = 1) -> str:
@@ -393,15 +400,37 @@ The throughput curves use successful request rows only. Error rate was 0% in all
 
 ## DCGM Telemetry
 
-![DCGM replicates](images/dcgm_replicates.png)
+![DCGM GPU utilization](images/dcgm_gpu_util_pct_replicates.png)
 
 ### GPU utilization % (mean ± std)
 
 {dcgm_table(data, "gpu_util_pct")}
 
+![DCGM SM active](images/dcgm_sm_active_pct_replicates.png)
+
 ### SM active % (mean ± std)
 
 {dcgm_table(data, "sm_active_pct")}
+
+![DCGM tensor active](images/dcgm_tensor_active_pct_replicates.png)
+
+### Tensor active % (mean ± std)
+
+{dcgm_table(data, "tensor_active_pct")}
+
+![DCGM memory copy utilization](images/dcgm_mem_copy_util_pct_replicates.png)
+
+### Memory copy utilization % (mean ± std)
+
+{dcgm_table(data, "mem_copy_util_pct")}
+
+![DCGM framebuffer used](images/dcgm_fb_used_gib_replicates.png)
+
+### Framebuffer used GiB (mean ± std)
+
+{dcgm_table(data, "fb_used_gib")}
+
+![DCGM total power](images/dcgm_power_total_w_replicates.png)
 
 ### Total GPU power W, 4 GPUs (mean ± std)
 

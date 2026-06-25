@@ -6,10 +6,6 @@
 **Replicates:** N=2 per engine  
 **Benchmark nodes:** `infra02` with `power_throttling` reservation
 
-## Research Question
-
-With prefix/radix caching disabled and identical workload, do vLLM and SGLang reach the same saturation point on Apertus-70B, and what saturates first?
-
 ## Executive Summary
 
 This report compares vLLM and SGLang on Apertus-70B after correcting the initial invalid comparison. vLLM prefix caching and SGLang radix caching are both disabled. The exact same prompt pool, arrival process, phases, SLOs, and served models were reused across the two replicates.
@@ -94,7 +90,7 @@ The throughput curves use successful request rows only. Error rate was 0% in all
 
 ## DCGM Telemetry
 
-![DCGM replicates](images/dcgm_replicates.png)
+![DCGM GPU utilization](images/dcgm_gpu_util_pct_replicates.png)
 
 ### GPU utilization % (mean ± std)
 
@@ -103,12 +99,43 @@ The throughput curves use successful request rows only. Error rate was 0% in all
 | vLLM | 88.1 ± 0.8 | 99.9 ± 0.1 | 99.0 ± 0.7 | 98.9 ± 0.8 |
 | SGLang | 88.2 ± 0.7 | 100.0 ± 0.0 | 99.9 ± 0.0 | 100.0 ± 0.0 |
 
+![DCGM SM active](images/dcgm_sm_active_pct_replicates.png)
+
 ### SM active % (mean ± std)
 
 | Engine | λ=2 | λ=4 | λ=8 | λ=12 |
 |---|---:|---:|---:|---:|
 | vLLM | 49.7 ± 1.1 | 60.9 ± 0.3 | 62.1 ± 2.2 | 73.9 ± 0.4 |
 | SGLang | 47.1 ± 1.1 | 59.7 ± 0.1 | 68.1 ± 0.4 | 76.4 ± 0.2 |
+
+![DCGM tensor active](images/dcgm_tensor_active_pct_replicates.png)
+
+### Tensor active % (mean ± std)
+
+| Engine | λ=2 | λ=4 | λ=8 | λ=12 |
+|---|---:|---:|---:|---:|
+| vLLM | 6.8 ± 0.2 | 14.3 ± 0.4 | 28.9 ± 0.5 | 52.1 ± 0.4 |
+| SGLang | 7.0 ± 0.2 | 15.0 ± 0.2 | 31.4 ± 0.8 | 43.1 ± 0.1 |
+
+![DCGM memory copy utilization](images/dcgm_mem_copy_util_pct_replicates.png)
+
+### Memory copy utilization % (mean ± std)
+
+| Engine | λ=2 | λ=4 | λ=8 | λ=12 |
+|---|---:|---:|---:|---:|
+| vLLM | 63.3 ± 2.4 | 66.9 ± 4.8 | 49.5 ± 0.5 | 32.3 ± 1.4 |
+| SGLang | 52.1 ± 0.6 | 54.8 ± 0.7 | 42.5 ± 0.3 | 39.3 ± 0.5 |
+
+![DCGM framebuffer used](images/dcgm_fb_used_gib_replicates.png)
+
+### Framebuffer used GiB (mean ± std)
+
+| Engine | λ=2 | λ=4 | λ=8 | λ=12 |
+|---|---:|---:|---:|---:|
+| vLLM | 87.6 ± 0.0 | 87.6 ± 0.0 | 87.6 ± 0.0 | 87.6 ± 0.0 |
+| SGLang | 93.0 ± 1.1 | 93.0 ± 1.0 | 93.1 ± 1.0 | 93.8 ± 0.2 |
+
+![DCGM total power](images/dcgm_power_total_w_replicates.png)
 
 ### Total GPU power W, 4 GPUs (mean ± std)
 
@@ -148,4 +175,4 @@ This is a capacity result, not a quality result. Quality evaluation was disabled
 | SGLang served model | `swiss-ai/Apertus-70B-Instruct-2509-sglang-pure-brachium-20260618-115342` |
 | vLLM run DBs | `data/vllm_run1.db`, `data/vllm_run2.db` |
 | SGLang run DBs | `data/sglang_run1.db`, `data/sglang_run2.db` |
-| Generated | 2026-06-18T10:32:24.865817+00:00 |
+| Generated | 2026-06-25T10:41:09.912060+00:00 |

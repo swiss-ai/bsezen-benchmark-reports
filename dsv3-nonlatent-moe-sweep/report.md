@@ -86,9 +86,17 @@ Output tokens/s scales roughly linearly with λ across all three variants up to 
 
 ## DCGM Telemetry
 
-![DCGM sweep](images/dcgm_sweep.png)
-
 Per-rate means across both replicates. `slurm_job_id` selector pinned per variant; metric windows aligned to each rate level's `server_stats` start/end.
+
+![DCGM GPU util](images/dcgm_gpu_util.png)
+
+![DCGM SM active](images/dcgm_sm_active.png)
+
+![DCGM Tensor active](images/dcgm_tensor_active.png)
+
+![DCGM Memory copy util](images/dcgm_mem_copy_util.png)
+
+![DCGM Power total](images/dcgm_power_total.png)
 
 ### GPU utilisation %
 
@@ -126,15 +134,30 @@ Per-rate means across both replicates. `slurm_job_id` selector pinned per varian
 | 3.0 | 3,467 | 3,357 | 3,402 |
 | 4.0 | 3,464 | 3,552 | 3,551 |
 
+### Memory copy util %
+
+| λ | N=32 / k=2 | N=64 / k=4 | N=128 / k=8 |
+|---:|---:|---:|---:|
+| 1.0 | 7.8 | 7.7 | 7.6 |
+| 2.0 | 7.6 | 7.6 | 7.8 |
+| 3.0 | 7.8 | 7.8 | 8.3 |
+| 4.0 | 8.2 | 9.0 | 9.2 |
+
 Framebuffer used was ~84.6–85.2 GiB/GPU across all variants, essentially flat — checkpoint footprint is matched by construction.
 
 `DCGM_FI_DEV_GPU_UTIL` is near-saturation (~98%) at every measured λ for every variant, but `DCGM_FI_PROF_SM_ACTIVE` and `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE` stay low (<19% and <2.4% respectively). This is the expected fingerprint of sparse-activation MoE serving on this hardware: the device is busy but compute pipes spend most of the time waiting on routing, memory, and cross-rank exchange, not on dense matmuls.
 
 ## Communication
 
-![Communication sweep](images/comm_sweep.png)
-
 Intra-node NVLink TX/RX bytes via `DCGM_FI_PROF_NVLINK_{TX,RX}_BYTES`, summed across all 16 GPUs and rate'd over each rate level's measurement window. PCIe counters are reported but stay below ~1 MiB/s for all rates (GH200's unified CPU/GPU memory keeps PCIe traffic near zero).
+
+![NVLink TX](images/comm_nvlink_tx.png)
+
+![NVLink RX](images/comm_nvlink_rx.png)
+
+![PCIe TX](images/comm_pcie_tx.png)
+
+![PCIe RX](images/comm_pcie_rx.png)
 
 ### NVLink TX, GiB/s aggregate (16 GPUs)
 
